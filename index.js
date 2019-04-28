@@ -173,7 +173,7 @@ class Broadlink extends EventEmitter {
     const deviceType = message[0x34] | (message[0x35] << 8);
 
     // Create a Device instance
-    this.addDevice(host, macAddress, deviceType);
+    this.addDevice(host, key, deviceType);
   }
 
   addDevice(host, macAddress, deviceType) {
