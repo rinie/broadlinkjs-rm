@@ -1,9 +1,8 @@
 {
   "name": "broadlinkjs-rm",
-  "version": "0.6.0",
+  "version": "0.7.6",
   "description": "A Node.JS fork of broadlinkjs specifically intended for interacting with RM devices in homebridge-broadlink-rm",
   "main": "index.js",
-  "types": "index.d.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -22,11 +21,5 @@
   "bugs": {
     "url": "https://github.com/lprhodes/broadlinkjs-rm/issues"
   },
-  "homepage": "https://github.com/lprhodes/broadlinkjs-rm#readme",
-  "dependencies": {
-    "@types/node": "^7.0.5"
-  },
-  "directories": {
-    "test": "test"
-  }
+  "homepage": "https://github.com/lprhodes/broadlinkjs-rm#readme"
 }

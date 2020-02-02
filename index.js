@@ -7,54 +7,53 @@ const assert = require("assert");
 // RM Devices (without RF support)
 const rmDeviceTypes = {};
 rmDeviceTypes[parseInt(0x2737, 16)] = "Broadlink RM Mini";
-rmDeviceTypes[parseInt(0x27c7, 16)] = "Broadlink RM Mini 3 A";
+rmDeviceTypes[parseInt(0x27c7, 16)] = 'Broadlink RM Mini 3 A'; 
 rmDeviceTypes[parseInt(0x27c2, 16)] = "Broadlink RM Mini 3 B";
 rmDeviceTypes[parseInt(0x27de, 16)] = "Broadlink RM Mini 3 C";
 rmDeviceTypes[parseInt(0x5f36, 16)] = "Broadlink RM Mini 3 D";
-rmDeviceTypes[parseInt(0x273d, 16)] = "Broadlink RM Pro Phicomm";
-rmDeviceTypes[parseInt(0x2712, 16)] = "Broadlink RM2";
-rmDeviceTypes[parseInt(0x2783, 16)] = "Broadlink RM2 Home Plus";
-rmDeviceTypes[parseInt(0x277c, 16)] = "Broadlink RM2 Home Plus GDT";
-rmDeviceTypes[parseInt(0x278f, 16)] = "Broadlink RM Mini Shate";
+rmDeviceTypes[parseInt(0x273d, 16)] = 'Broadlink RM Pro Phicomm';
+rmDeviceTypes[parseInt(0x2712, 16)] = 'Broadlink RM2';
+rmDeviceTypes[parseInt(0x2783, 16)] = 'Broadlink RM2 Home Plus';
+rmDeviceTypes[parseInt(0x277c, 16)] = 'Broadlink RM2 Home Plus GDT';
+rmDeviceTypes[parseInt(0x278f, 16)] = 'Broadlink RM Mini Shate';
 
 // RM Devices (with RF support)
 const rmPlusDeviceTypes = {};
-rmPlusDeviceTypes[parseInt(0x272a, 16)] = "Broadlink RM2 Pro Plus";
-rmPlusDeviceTypes[parseInt(0x2787, 16)] = "Broadlink RM2 Pro Plus v2";
-rmPlusDeviceTypes[parseInt(0x278b, 16)] = "Broadlink RM2 Pro Plus BL";
-rmPlusDeviceTypes[parseInt(0x2797, 16)] = "Broadlink RM2 Pro Plus HYC";
-rmPlusDeviceTypes[parseInt(0x27a1, 16)] = "Broadlink RM2 Pro Plus R1";
-rmPlusDeviceTypes[parseInt(0x27a6, 16)] = "Broadlink RM2 Pro PP";
-rmPlusDeviceTypes[parseInt(0x279d, 16)] = "Broadlink RM3 Pro Plus";
-rmPlusDeviceTypes[parseInt(0x27a9, 16)] = "Broadlink RM3 Pro Plus v2"; // (model RM 3422)
-rmPlusDeviceTypes[parseInt(0x27c3, 16)] = "Broadlink RM3 Pro";
+rmPlusDeviceTypes[parseInt(0x272a, 16)] = 'Broadlink RM2 Pro Plus';
+rmPlusDeviceTypes[parseInt(0x2787, 16)] = 'Broadlink RM2 Pro Plus v2';
+rmPlusDeviceTypes[parseInt(0x278b, 16)] = 'Broadlink RM2 Pro Plus BL';
+rmPlusDeviceTypes[parseInt(0x2797, 16)] = 'Broadlink RM2 Pro Plus HYC';
+rmPlusDeviceTypes[parseInt(0x27a1, 16)] = 'Broadlink RM2 Pro Plus R1';
+rmPlusDeviceTypes[parseInt(0x27a6, 16)] = 'Broadlink RM2 Pro PP';
+rmPlusDeviceTypes[parseInt(0x279d, 16)] = 'Broadlink RM3 Pro Plus';
+rmPlusDeviceTypes[parseInt(0x27a9, 16)] = 'Broadlink RM3 Pro Plus v2'; // (model RM 3422)
+rmPlusDeviceTypes[parseInt(0x27c3, 16)] = 'Broadlink RM3 Pro';
+
 
 // Known Unsupported Devices
 const unsupportedDeviceTypes = {};
-unsupportedDeviceTypes[parseInt(0, 16)] = "Broadlink SP1";
-unsupportedDeviceTypes[parseInt(0x2711, 16)] = "Broadlink SP2";
-unsupportedDeviceTypes[parseInt(0x2719, 16)] = "Honeywell SP2";
-unsupportedDeviceTypes[parseInt(0x7919, 16)] = "Honeywell SP2";
-unsupportedDeviceTypes[parseInt(0x271a, 16)] = "Honeywell SP2";
-unsupportedDeviceTypes[parseInt(0x791a, 16)] = "Honeywell SP2";
-unsupportedDeviceTypes[parseInt(0x2733, 16)] = "OEM Branded SP Mini";
-unsupportedDeviceTypes[parseInt(0x273e, 16)] = "OEM Branded SP Mini";
-unsupportedDeviceTypes[parseInt(0x2720, 16)] = "Broadlink SP Mini";
-unsupportedDeviceTypes[parseInt(0x7d07, 16)] = "Broadlink SP Mini";
-unsupportedDeviceTypes[parseInt(0x753e, 16)] = "Broadlink SP 3";
-unsupportedDeviceTypes[parseInt(0x2728, 16)] = "Broadlink SPMini 2";
-unsupportedDeviceTypes[parseInt(0x2736, 16)] = "Broadlink SPMini Plus";
-unsupportedDeviceTypes[parseInt(0x2714, 16)] = "Broadlink A1";
-unsupportedDeviceTypes[parseInt(0x4eb5, 16)] = "Broadlink MP1";
-unsupportedDeviceTypes[parseInt(0x2722, 16)] =
-  "Broadlink S1 (SmartOne Alarm Kit)";
-unsupportedDeviceTypes[parseInt(0x4e4d, 16)] =
-  "Dooya DT360E (DOOYA_CURTAIN_V2) or Hysen Heating Controller";
-unsupportedDeviceTypes[parseInt(0x4ead, 16)] =
-  "Dooya DT360E (DOOYA_CURTAIN_V2) or Hysen Heating Controller";
-unsupportedDeviceTypes[parseInt(0x947a, 16)] = "BroadLink Outlet";
+unsupportedDeviceTypes[parseInt(0, 16)] = 'Broadlink SP1';
+unsupportedDeviceTypes[parseInt(0x2711, 16)] = 'Broadlink SP2';
+unsupportedDeviceTypes[parseInt(0x2719, 16)] = 'Honeywell SP2';
+unsupportedDeviceTypes[parseInt(0x7919, 16)] = 'Honeywell SP2';
+unsupportedDeviceTypes[parseInt(0x271a, 16)] = 'Honeywell SP2';
+unsupportedDeviceTypes[parseInt(0x791a, 16)] = 'Honeywell SP2';
+unsupportedDeviceTypes[parseInt(0x2733, 16)] = 'OEM Branded SP Mini';
+unsupportedDeviceTypes[parseInt(0x273e, 16)] = 'OEM Branded SP Mini';
+unsupportedDeviceTypes[parseInt(0x2720, 16)] = 'Broadlink SP Mini';
+unsupportedDeviceTypes[parseInt(0x7d07, 16)] = 'Broadlink SP Mini';
+unsupportedDeviceTypes[parseInt(0x753e, 16)] = 'Broadlink SP 3';
+unsupportedDeviceTypes[parseInt(0x2728, 16)] = 'Broadlink SPMini 2';
+unsupportedDeviceTypes[parseInt(0x2736, 16)] = 'Broadlink SPMini Plus';
+unsupportedDeviceTypes[parseInt(0x2714, 16)] = 'Broadlink A1';
+unsupportedDeviceTypes[parseInt(0x4EB5, 16)] = 'Broadlink MP1';
+unsupportedDeviceTypes[parseInt(0x2722, 16)] = 'Broadlink S1 (SmartOne Alarm Kit)';
+unsupportedDeviceTypes[parseInt(0x4E4D, 16)] = 'Dooya DT360E (DOOYA_CURTAIN_V2) or Hysen Heating Controller';
+unsupportedDeviceTypes[parseInt(0x4ead, 16)] = 'Dooya DT360E (DOOYA_CURTAIN_V2) or Hysen Heating Controller';
+unsupportedDeviceTypes[parseInt(0x947a, 16)] = 'BroadLink Outlet';
 
 class Broadlink extends EventEmitter {
+
   constructor() {
     super();
 
@@ -190,13 +189,14 @@ class Broadlink extends EventEmitter {
     const { log, debug } = this;
 
     if (this.devices[macAddress]) return;
-
-    assert(
-      typeof host === "object" &&
-        (host.port || host.port === 0) &&
-        host.address,
-      `createDevice: host should be an object e.g. { address: '192.168.1.32', port: 80 }`
+  
+    const isHostObjectValid = (
+      typeof host === 'object' &&
+      (host.port || host.port === 0) &&
+      host.address
     );
+
+    assert(isHostObjectValid, `createDevice: host should be an object e.g. { address: '192.168.1.32', port: 80 }`);
     assert(macAddress, `createDevice: A unique macAddress should be provided`);
     assert(
       deviceType,
@@ -213,18 +213,11 @@ class Broadlink extends EventEmitter {
 
     // If we don't know anything about the device we ask the user to provide details so that
     // we can handle it correctly.
-    if (
-      !rmDeviceTypes[parseInt(deviceType, 16)] &&
-      !rmPlusDeviceTypes[parseInt(deviceType, 16)]
-    ) {
-      log(
-        `\n\x1b[35m[Info]\x1b[0m We've discovered an unknown Broadlink device. This likely won't cause any issues.\n\nPlease raise an issue in the GitHub repository (https://github.com/lprhodes/homebridge-broadlink-rm/issues) with details of the type of device and its device type code: "${deviceType.toString(
-          16
-        )}". The device is connected to your network with the IP address "${
-          host.address
-        }".\n`
-      );
+    const isKnownDevice = (rmDeviceTypes[parseInt(deviceType, 16)] || rmPlusDeviceTypes[parseInt(deviceType, 16)])
 
+    if (!isKnownDevice) {
+      log(`\n\x1b[35m[Info]\x1b[0m We've discovered an unknown Broadlink device. This likely won't cause any issues.\n\nPlease raise an issue in the GitHub repository (https://github.com/lprhodes/homebridge-broadlink-rm/issues) with details of the type of device and its device type code: "${deviceType.toString(16)}". The device is connected to your network with the IP address "${host.address}".\n`);
+      
       return null;
     }
 
@@ -307,7 +300,7 @@ class Device {
 
   // Create a UDP socket to receive messages from the broadlink device.
   setupSocket() {
-    const socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
+    const socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
     this.socket = socket;
 
     socket.on("message", response => {
@@ -344,7 +337,7 @@ class Device {
       } else if (command == 0xee || command == 0xef) {
         this.onPayloadReceived(err, payload);
       } else {
-        console.log("Unhandled Command: ", command);
+        console.log('Unhandled Command: ', command);
       }
     });
 
