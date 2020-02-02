@@ -169,9 +169,9 @@ class Broadlink extends EventEmitter {
     // Broadlink device has responded
     const macAddress = Buffer.alloc(6, 0);
 
-    message.copy(macAddress, 0x00, 0x3d);
+    message.copy(macAddress, 0x00, 0x3f);
     message.copy(macAddress, 0x01, 0x3e);
-    message.copy(macAddress, 0x02, 0x3f);
+    message.copy(macAddress, 0x02, 0x3d);
     message.copy(macAddress, 0x03, 0x3c);
     message.copy(macAddress, 0x04, 0x3b);
     message.copy(macAddress, 0x05, 0x3a);
