@@ -7,7 +7,7 @@ const assert = require("assert");
 // RM Devices (without RF support)
 const rmDeviceTypes = {};
 rmDeviceTypes[parseInt(0x2737, 16)] = "Broadlink RM Mini";
-rmDeviceTypes[parseInt(0x27c7, 16)] = 'Broadlink RM Mini 3 A'; 
+rmDeviceTypes[parseInt(0x27c7, 16)] = 'Broadlink RM Mini 3 A';
 rmDeviceTypes[parseInt(0x27c2, 16)] = "Broadlink RM Mini 3 B";
 rmDeviceTypes[parseInt(0x27de, 16)] = "Broadlink RM Mini 3 C";
 rmDeviceTypes[parseInt(0x5f36, 16)] = "Broadlink RM Mini 3 D";
@@ -189,7 +189,7 @@ class Broadlink extends EventEmitter {
     const { log, debug } = this;
 
     if (this.devices[macAddress]) return;
-  
+
     const isHostObjectValid = (
       typeof host === 'object' &&
       (host.port || host.port === 0) &&
@@ -217,7 +217,7 @@ class Broadlink extends EventEmitter {
 
     if (!isKnownDevice) {
       log(`\n\x1b[35m[Info]\x1b[0m We've discovered an unknown Broadlink device. This likely won't cause any issues.\n\nPlease raise an issue in the GitHub repository (https://github.com/lprhodes/homebridge-broadlink-rm/issues) with details of the type of device and its device type code: "${deviceType.toString(16)}". The device is connected to your network with the IP address "${host.address}".\n`);
-      
+
       return null;
     }
 
@@ -253,7 +253,7 @@ class Device {
     this.removeListener = this.emitter.removeListener;
 
     this.count = Math.random() & 0xffff;
-    this.key = new Buffer([
+    this.key = Buffer.from([
       0x09,
       0x76,
       0x28,
@@ -271,7 +271,7 @@ class Device {
       0x8b,
       0x02
     ]);
-    this.iv = new Buffer([
+    this.iv = Buffer.from([
       0x56,
       0x2e,
       0x17,
@@ -289,7 +289,7 @@ class Device {
       0x6f,
       0x58
     ]);
-    this.id = new Buffer([0, 0, 0, 0]);
+    this.id = Buffer.from([0, 0, 0, 0]);
 
     this.setupSocket();
 
