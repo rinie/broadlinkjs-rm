@@ -3,6 +3,7 @@ const dgram = require("dgram");
 const os = require("os");
 const crypto = require("crypto");
 const assert = require("assert");
+const debug = require('debug')('broadlink');
 
 // RM Devices (without RF support)
 const rmDeviceTypes = {};
@@ -451,7 +452,7 @@ class Device {
 
     const data = Buffer.alloc(payload.length - 4, 0);
     payload.copy(data, 0, 4);
-
+    debug('onPayloadReceived Payload %o', payload);
     switch (param) {
       case 1: {
         const temp = (payload[0x4] * 10 + payload[0x5]) / 10.0;
@@ -465,74 +466,79 @@ class Device {
         this.emit("rawData", data);
         break;
       }
-      case 26: {
+      case 0x1a: {
         //get from check_data
         const data = Buffer.alloc(1, 0);
         payload.copy(data, 0, 0x4);
-        if (data[0] !== 0x1) break;
-        this.emit("rawRFData", data);
+        if (data[0] === 0x1) {
+          this.emit("rawRFData", data);
+        }
         break;
       }
-      case 27: {
+      case 0x1b: {
         //get from check_data
         const data = Buffer.alloc(1, 0);
         payload.copy(data, 0, 0x4);
-        if (data[0] !== 0x1) break;
-        this.emit("rawRFData2", data);
+        if (data[0] === 0x1) {
+          this.emit("rawRFData2", data);
+        }
         break;
       }
     }
   }
 
   // Externally Accessed Methods
-
-  checkData() {
+  sendPacket6a(packet0, debug = false) {
     const packet = Buffer.alloc(16, 0);
-    packet[0] = 4;
+    packet[0] = packet0;
     this.sendPacket(0x6a, packet);
+  }
+  checkData() {
+    debug('checkData');
+    this.sendPacket6a(0x04);
   }
 
   sendData(data, debug = false) {
     let packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
+    // 0x04 or data[0x00]: 0x26 = IR, 0xb2 for RF 433Mhz, 0xd7 for RF 315Mhz
+    // 0x05 repeat count, (0 = no repeat, 1 send twice, .....)
+    // 0x06 - 0x07 Length of the following data in little endian
+    // 0x08 and up: Pulse lengths in 2^-15 s units (µs * 269 / 8192 works very well)
+    // IR end: 0x0d 0x05 at the end for IR only
     packet = Buffer.concat([packet, data]);
     this.sendPacket(0x6a, packet, debug);
   }
 
   enterLearning() {
-    let packet = Buffer.alloc(16, 0);
-    packet[0] = 3;
-    this.sendPacket(0x6a, packet);
+    debug('enterLearning');
+    this.sendPacket6a(0x03);
   }
 
   checkTemperature() {
-    let packet = Buffer.alloc(16, 0);
-    packet[0] = 1;
-    this.sendPacket(0x6a, packet);
+    debug('checkTemperature');
+    this.sendPacket6a(0x01);
   }
 
   cancelLearn() {
-    const packet = Buffer.alloc(16, 0);
-    packet[0] = 0x1e;
-    this.sendPacket(0x6a, packet);
+    debug('cancelLearn');
+    this.sendPacket6a(0x1e);
   }
 
   addRFSupport() {
+    debug('addRFSupport');
     this.enterRFSweep = () => {
-      const packet = Buffer.alloc(16, 0);
-      packet[0] = 0x19;
-      this.sendPacket(0x6a, packet);
+      debug('enterRFSweep');
+      this.sendPacket6a(0x19);
     };
 
     this.checkRFData = () => {
-      const packet = Buffer.alloc(16, 0);
-      packet[0] = 0x1a;
-      this.sendPacket(0x6a, packet);
+      debug('checkRFData');
+      this.sendPacket6a(0x1a);
     };
 
     this.checkRFData2 = () => {
-      const packet = Buffer.alloc(16, 0);
-      packet[0] = 0x1b;
-      this.sendPacket(0x6a, packet);
+      debug('checkRFData2');
+      this.sendPacket6a(0x1b);
     };
   }
 }
