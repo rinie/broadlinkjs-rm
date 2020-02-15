@@ -446,6 +446,103 @@ class Device {
       }
     );
   }
+  decodePayload(payload) {
+    let signalType = payload[0x4].toString(16);
+    switch (payload[0x4]) {
+      case 0x26:
+        signalType = 'ir';
+        break;
+      case 0xb2:
+        signalType = 'ook433';
+        break;
+      case 0xd7:
+        signalType = 'ook315';
+        break;
+      default:
+        signalType = payload[0x4].toString(16);
+        break;
+    }
+    const repeat = payload[0x5];
+    const pulseSpaceCount = payload[0x6] | payload[0x7] << 8;
+    const psc = (pulseSpaceCount + 8 < payload.length) ? pulseSpaceCount + 8 : payload.length;
+    const psValue = [];
+    const psCount = [];
+    let nPulseSpace = 0;
+    for (let i = 8; i < psc; i++) {
+      let ps = payload[i];
+      if (ps === 0) { // 0 then big endian 2 bytes
+        ps = (payload[i + 1] << 8) | payload[i + 2];
+        i += 2;
+      }
+      const j = psValue.indexOf(ps);
+      if (j === -1) {
+        // pulseSpace.push(ps); // ms decode
+        psValue[nPulseSpace] = ps + 0;
+        psCount[nPulseSpace] = 1;
+        nPulseSpace++;
+      } else {
+        psCount[j] += 1;
+      }
+    }
+    const pulseSpace = [];
+    for (let i = 0; i < psValue.length; i++) {
+      pulseSpace[i] = { ps: psValue[i], count: psCount[i], ms: Math.round(psValue[i] * 8192 / 269) };
+    }
+
+    pulseSpace.sort((a, b) => a.ps - b.ps);
+
+    let index = 0;
+    let psv = psValue[0];
+    let psct = 0;
+    let i = 0;
+    let minGap = (psv < 10) ? 1 : (psv < 100) ? 3 : (psv < 1000) ? 10 : 100;
+    const ticks = [];
+    const ms = [];
+    const counts = [];
+    for (; i < pulseSpace.length; i++) {
+      if (pulseSpace[i].ps > psv + minGap) {
+        pulseSpace[i - 1].totalCount = psct;
+        ticks.push(pulseSpace[i - 1].ps);
+        ms.push(pulseSpace[i - 1].ms);
+        counts.push(pulseSpace[i - 1].totalCount);
+        index++;
+        psct = pulseSpace[i].count;
+        psv = pulseSpace[i].ps;
+        minGap = (psv < 10) ? 1 : (psv < 100) ? 3 : (psv < 1000) ? 10 : 100;
+      } else {
+        psct += pulseSpace[i].count;
+        psv = pulseSpace[i].ps;
+      }
+      pulseSpace[i] = {
+        ps: pulseSpace[i].ps, count: pulseSpace[i].count, ms: pulseSpace[i].ms, index,
+      };
+    }
+    pulseSpace[i - 1].totalCount = psct;
+    ticks.push(pulseSpace[i - 1].ps);
+    ms.push(pulseSpace[i - 1].ms);
+    counts.push(pulseSpace[i - 1].totalCount);
+
+    // todo: sort unique values and index them psi
+    let pulseSpace2 = '';
+    for (let i = 8; i < psc; i++) {
+      let ps = payload[i];
+      if (ps === 0) { // 0 then big endian 2 bytes
+        ps = (payload[i + 1] << 8) | payload[i + 2];
+        i += 2;
+      }
+      const psi = pulseSpace.find((a) => a.ps === ps);
+      pulseSpace2 += psi.index.toString(16);
+    }
+    return {
+      signalType,
+      repeat,
+      count: pulseSpaceCount,
+      ticks,
+      counts,
+      ms,
+      psi: pulseSpace2,
+    };
+  };
 
   onPayloadReceived(err, payload) {
     const param = payload[0];
@@ -461,8 +558,9 @@ class Device {
       }
       case 4: {
         //get from check_data
-        const data = Buffer.alloc(payload.length - 4, 0);
-        payload.copy(data, 0, 4);
+//        const data = Buffer.alloc(payload.length - 4, 0);
+//        payload.copy(data, 0, 4);
+        let data = this.decodePayload(payload);
         this.emit("rawData", data);
         break;
       }
