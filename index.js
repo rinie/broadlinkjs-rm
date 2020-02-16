@@ -446,8 +446,10 @@ class Device {
       }
     );
   }
+
   decodePayload(payload) {
-    let signalType = payload[0x4].toString(16);
+    const ticksToMicros =  8192 / 269; /* 30.51757 */ // 2^-15 seconds
+    let signalType; // payload 0x4
     switch (payload[0x4]) {
       case 0x26:
         signalType = 'ir';
@@ -464,7 +466,10 @@ class Device {
     }
     const repeat = payload[0x5];
     const pulseSpaceCount = payload[0x6] | payload[0x7] << 8;
-    const psc = (pulseSpaceCount + 8 < payload.length) ? pulseSpaceCount + 8 : payload.length;
+    // Values larger than 255 are 3 bytes 0 + big endian 2 bytes
+    // payload[0x08...length or pulseSpaceCount
+    //const psc = (pulseSpaceCount + 8 < payload.length) ? pulseSpaceCount + 8 : payload.length;
+    const psc = Math.min(pulseSpaceCount + 8, payload.length);
     const psValue = [];
     const psCount = [];
     let nPulseSpace = 0;
@@ -476,7 +481,6 @@ class Device {
       }
       const j = psValue.indexOf(ps);
       if (j === -1) {
-        // pulseSpace.push(ps); // ms decode
         psValue[nPulseSpace] = ps + 0;
         psCount[nPulseSpace] = 1;
         nPulseSpace++;
@@ -484,42 +488,43 @@ class Device {
         psCount[j] += 1;
       }
     }
+    // convert indexed ticks to micros
     const pulseSpace = [];
     for (let i = 0; i < psValue.length; i++) {
-      pulseSpace[i] = { ps: psValue[i], count: psCount[i], ms: Math.round(psValue[i] * 8192 / 269) };
+      pulseSpace[i] = { ps: psValue[i], count: psCount[i], micros: Math.round(psValue[i] * ticksToMicros) };
     }
-
+    // sort to ascending ticks/micros
     pulseSpace.sort((a, b) => a.ps - b.ps);
 
     let index = 0;
-    let psv = psValue[0];
     let psct = 0;
     let i = 0;
-    let minGap = (psv < 10) ? 1 : (psv < 100) ? 3 : (psv < 1000) ? 10 : 100;
+    let curMicro = pulseSpace[0].micros;
+    let minGap = (curMicro < 1000) ? 50 : 100;
     const ticks = [];
-    const ms = [];
+    const micros = [];
     const counts = [];
     for (; i < pulseSpace.length; i++) {
-      if (pulseSpace[i].ps > psv + minGap) {
+      if (pulseSpace[i].micros > curMicro + minGap) {
         pulseSpace[i - 1].totalCount = psct;
         ticks.push(pulseSpace[i - 1].ps);
-        ms.push(pulseSpace[i - 1].ms);
+        micros.push(pulseSpace[i - 1].micros);
         counts.push(pulseSpace[i - 1].totalCount);
         index++;
         psct = pulseSpace[i].count;
-        psv = pulseSpace[i].ps;
-        minGap = (psv < 10) ? 1 : (psv < 100) ? 3 : (psv < 1000) ? 10 : 100;
+        curMicro = pulseSpace[i].micros;
+        minGap = (curMicro < 1000) ? 50 : 100;
       } else {
         psct += pulseSpace[i].count;
-        psv = pulseSpace[i].ps;
+        curMicro = pulseSpace[i].micros;
       }
       pulseSpace[i] = {
-        ps: pulseSpace[i].ps, count: pulseSpace[i].count, ms: pulseSpace[i].ms, index,
+        ps: pulseSpace[i].ps, count: pulseSpace[i].count, micros: pulseSpace[i].micros, index,
       };
     }
     pulseSpace[i - 1].totalCount = psct;
     ticks.push(pulseSpace[i - 1].ps);
-    ms.push(pulseSpace[i - 1].ms);
+    micros.push(pulseSpace[i - 1].micros);
     counts.push(pulseSpace[i - 1].totalCount);
 
     // todo: sort unique values and index them psi
@@ -539,7 +544,7 @@ class Device {
       count: pulseSpaceCount,
       ticks,
       counts,
-      ms,
+      micros,
       psi: pulseSpace2,
     };
   };
@@ -601,7 +606,7 @@ class Device {
     // 0x04 or data[0x00]: 0x26 = IR, 0xb2 for RF 433Mhz, 0xd7 for RF 315Mhz
     // 0x05 repeat count, (0 = no repeat, 1 send twice, .....)
     // 0x06 - 0x07 Length of the following data in little endian
-    // 0x08 and up: Pulse lengths in 2^-15 s units (µs * 269 / 8192 works very well)
+    // 0x08 and up: Pulse lengths in 2^-15 s units (ï¿½s * 269 / 8192 works very well)
     // IR end: 0x0d 0x05 at the end for IR only
     packet = Buffer.concat([packet, data]);
     this.sendPacket(0x6a, packet, debug);
