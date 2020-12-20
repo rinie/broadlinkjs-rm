@@ -21,3 +21,6 @@ broadlink.discover();
 ### Thanks
 
 This work is based on https://github.com/lprhodes/broadlinkjs-rm
+Some code taken from https://github.com/rinie/broadlinkjs-sm a fork of https://github.com/francxk/broadlinkjs-sm
+use set DEBUG=broadlink for verbose output
+
