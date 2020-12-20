@@ -672,20 +672,26 @@ Data { signalType: 'ir',
 let fs = require('fs');
 
 var b = new broadlink();
+let fLearn = false;
 
 b.on('deviceReady', (dev) => {
-console.log(`device ready Type ${dev.type} Model ${dev.model} Hostt %o Mac %o`, dev.host, dev.mac);
+console.log(`device ready Type ${dev.type} Model ${dev.model} Host %o Mac %o`, dev.host, dev.mac);
 console.log(dev);
-        dev.enterLearning();
+        if (fLearn) {
+          dev.enterLearning();
+        }
     var timer = setInterval(function(){
         	dev.checkData();
     }, 3000);
 
     dev.on('temperature', (temp)=>{
         console.log("get temp "+temp);
-        dev.enterLearning();
-    });
+        if (fLearn) {
+          dev.enterLearning();
+        }
 
+    });
+    //dev.sendPsi('ook433', 3, [330, 990, 10230], 'x447 02'); // c3 ON
     dev.on('rawData', (data) => {
 			console.log('Data %o', data);
             //clearInterval(timer);
@@ -698,7 +704,9 @@ console.log(dev);
             clearInterval(timer);
         });
         */
-        dev.enterLearning();
+        if (fLearn) {
+          dev.enterLearning();
+        }
     });
     dev.on('rawRfData', (data) => {
       console.log('RfData %o', data);
@@ -706,7 +714,29 @@ console.log(dev);
     dev.on('rawRfData2', (data) => {
       console.log('RfData2 %o', data);
     });
-	    dev.checkTemperature();
+    if (!fLearn) {
+    //dev.sendPsi('ook433', 6, 330, [1, 3, 31], 'x565556555666 02');
+    //dev.sendPsi('ook433', 6, 1, [330, 990, 10230], '01010110010101010101011001010101010101100110011002');
+    // oregon rain
+    //dev.sendPsi('ook433', 2, 1, [450, 960, 6990], 'xFFFFFFFF92492724F9FFFFF2493E7FC9FFFFF3E7F39C9C9FF273E73F9F 0012');
+    dev.sendPsi('ook433', 4, 1, [440, 880, 10230], '11111111111111111111111111111111100100100100100100100111001001001111100111111111111111111111001001001001001111100111111111001001111111111111111111110011111001111111001110011100100111001001111111110010011100111110011100111111100111110012');
+/*
+ 43c0x20DF10EF-5 LG ON
+ 43c0x000800FF-5 HUMAX ON
+
+01010101 01010101 01010110 01010101 01010110 01100110
+55 55 56 55 56 66 2
+or
+0101 0101 0110 0101 0110 1010
+000001000111
+0 01
+1 10
+
+c01x47-02 [01, 10, 00]
+
+*/
+  }
+//	    dev.checkTemperature();
 //	else {
 //	    dev.setPower(1);
 //	}

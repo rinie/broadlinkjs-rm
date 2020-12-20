@@ -23,6 +23,6 @@
   },
   "homepage": "https://github.com/lprhodes/broadlinkjs-rm#readme",
   "dependencies": {
-    "debug": "^4.1.1"
+    "debug": "^4.3.1"
   }
 }

@@ -305,6 +305,7 @@ class Device {
     this.socket = socket;
 
     socket.on("message", response => {
+      console.log('response', response.length, response.toString("hex"));
       const encryptedPayload = Buffer.alloc(response.length - 0x38, 0);
       response.copy(encryptedPayload, 0, 0x38);
 
@@ -405,7 +406,17 @@ class Device {
     packet[0x31] = this.id[1];
     packet[0x32] = this.id[2];
     packet[0x33] = this.id[3];
-
+/*
+  https://github.com/mjg59/python-broadlink has:
+      # pad the payload for AES encryption
+        if payload:
+            payload += bytearray((16 - len(payload)) % 16)
+*/
+    if ((payload.length % 16) !== 0) {
+      const pad = 16 - payload.length % 16;
+      console.log('Pad payload', payload.length, payload.length%16, pad);
+      payload = Buffer.concat([payload, Buffer.alloc(pad, 0)]);
+    }
     let checksum = 0xbeaf;
     for (let i = 0; i < payload.length; i++) {
       checksum += payload[i];
@@ -429,6 +440,7 @@ class Device {
     packet[0x21] = checksum >> 8;
 
     if (debug) log("\x1b[33m[DEBUG]\x1b[0m packet", packet.toString("hex"));
+    console.log('packet', packet.length, packet.toString("hex"));
 
     socket.send(
       packet,
@@ -448,6 +460,8 @@ class Device {
   }
 
   decodePayload(payload) {
+    console.log('Send Payload2', payload.toString('hex'));
+
     const ticksToMicros =  8192 / 269; /* 30.51757 */ // 2^-15 seconds
     let signalType; // payload 0x4
     switch (payload[0x4]) {
@@ -556,12 +570,12 @@ class Device {
     payload.copy(data, 0, 4);
     debug('onPayloadReceived Payload %o', payload);
     switch (param) {
-      case 1: {
+      case 0x01: {
         const temp = (payload[0x4] * 10 + payload[0x5]) / 10.0;
         this.emit("temperature", temp);
         break;
       }
-      case 4: {
+      case 0x04: {
         //get from check_data
 //        const data = Buffer.alloc(payload.length - 4, 0);
 //        payload.copy(data, 0, 4);
@@ -587,6 +601,11 @@ class Device {
         }
         break;
       }
+      case 0x68: {
+        const firmwareVersion = (payload[0x4] + payload[0x5] * 256);
+        this.emit("firmware", firmwareVersion);
+        break;
+      }
     }
   }
 
@@ -596,20 +615,114 @@ class Device {
     packet[0] = packet0;
     this.sendPacket(0x6a, packet);
   }
+
   checkData() {
     debug('checkData');
     this.sendPacket6a(0x04);
   }
 
   sendData(data, debug = false) {
-    let packet = new Buffer([0x02, 0x00, 0x00, 0x00]);
+    let packet = Buffer.from([0x02, 0x00, 0x00, 0x00]);
     // 0x04 or data[0x00]: 0x26 = IR, 0xb2 for RF 433Mhz, 0xd7 for RF 315Mhz
     // 0x05 repeat count, (0 = no repeat, 1 send twice, .....)
     // 0x06 - 0x07 Length of the following data in little endian
     // 0x08 and up: Pulse lengths in 2^-15 s units (�s * 269 / 8192 works very well)
     // IR end: 0x0d 0x05 at the end for IR only
     packet = Buffer.concat([packet, data]);
+    console.log('Send Payload1', packet);
+    console.log('Send Payload', this.decodePayload(packet));
+
     this.sendPacket(0x6a, packet, debug);
+  }
+
+  sendPsi(signalType, repeat, baseMicro, micros, psix, debug = false) {
+    console.log('sendPsi', signalType, repeat, baseMicro, micros, psix);
+        //const ticksToMicros =  8192 / 269; /* 30.51757 */ // 2^-15 seconds
+        const microsToTick = (baseMicro * 269) / 8192;
+        let blSignalType;
+        switch (signalType) {
+          case 'ir':
+            blSignalType = 0x26;
+            break;
+          case 'ook433':
+            blSignalType = 0xb2;
+            break;
+          case 'ook315':
+            blSignalType = 0xd7;
+            break;
+        }
+
+      const ticks = [];
+      for (let i = 0; i < micros.length; i++) {
+        ticks[i] = Math.round(micros[i] * microsToTick);
+      }
+      const data = [];
+      let dataBytes = 0;
+      let dataBbytes = 0;
+      let hexMode = false;
+      for (let i = 0; i < psix.length; i++) {
+        const x = psix[i];
+        if (x === 'x') {
+          hexMode = true;
+        }
+        else if (x === ' ') {
+          hexMode = false;
+        }
+        else if (hexMode) {
+          let mask = 8;
+          for (let j = 0; j < 4; j++) {
+            const y = (x & mask) !== 0 ? 1: 0;
+            mask = mask >> 1;
+            const tick = ticks[y];
+            if (tick > 255) { // 0 then big endian 2 bytes
+              data[dataBytes] = 0;
+              dataBytes++;
+              data[dataBytes] = tick >> 8;
+              dataBytes++;
+              data[dataBytes] = tick & 0xFF;
+              dataBytes++;
+            }
+            else {
+              data[dataBytes] = tick;
+              dataBytes++;
+            }
+            dataBbytes++;
+          }
+        }
+        else {
+          const y = x;
+          const tick = ticks[y];
+          if (tick > 255) { // 0 then big endian 2 bytes
+            data[dataBytes] = 0;
+            dataBytes++;
+            data[dataBytes] = tick >> 8;
+            dataBytes++;
+            data[dataBytes] = tick & 0xFF;
+            dataBytes++;
+          }
+          else {
+            data[dataBytes] = tick;
+            dataBytes++;
+          }
+          dataBbytes++;
+        }
+      }
+      let payLoadLength = 4 + 4 + data.length;
+      if ((payLoadLength % 16) !== 0) {
+        payLoadLength += 16 - payLoadLength % 16;
+      }
+
+      //let payLoad = new Buffer([blSignalType, repeat, dataBytes >> 8, dataBytes & 0xFF]);
+      console.log('buf length', 4 + data.length, payLoadLength);
+      let payLoad = Buffer.alloc(payLoadLength, 0);
+      payLoad[0x00] = blSignalType;
+      payLoad[0x01] = repeat;
+      payLoad[0x02] = dataBytes & 0xFF;
+      payLoad[0x03] = dataBytes >> 8;
+      for (let i = 0; i < data.length; i++) {
+        payLoad[0x04 + i] = data[i];
+      }
+      this.sendData(payLoad);
   }
 
   enterLearning() {
@@ -620,6 +733,11 @@ class Device {
   checkTemperature() {
     debug('checkTemperature');
     this.sendPacket6a(0x01);
+  }
+
+  getFirmwareVersion() {
+    debug('getFirmwareVersion');
+    this.sendPacket6a(0x68);
   }
 
   cancelLearn() {
